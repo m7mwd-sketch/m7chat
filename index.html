@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#202c33">
   <title>M7 Chat</title>
 
-  <!-- مكتبات Firebase الجاهزة -->
+  <!-- Firebase Compat Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -232,8 +232,13 @@
       color: #e9edef;
     }
     .chat-friend-status {
-      font-size: 11.5px;
+      font-size: 12px;
+      color: #8696a0;
+      transition: color 0.3s;
+    }
+    .chat-friend-status.online {
       color: #00a884;
+      font-weight: bold;
     }
 
     .chat-box {
@@ -321,8 +326,12 @@
     .ticks {
       font-weight: bold;
       letter-spacing: -2px;
-      color: #53bdeb;
+      font-size: 12px;
       margin-right: 4px;
+      color: #8696a0;
+    }
+    .ticks.seen {
+      color: #53bdeb;
     }
 
     .reply-preview-bar {
@@ -443,7 +452,7 @@
         <button class="back-btn" onclick="closeChat()">➔</button>
         <div class="chat-friend-details">
           <h4 id="activeFriendName">اسم الصديق</h4>
-          <div class="chat-friend-status">سحابي دائم 🟢</div>
+          <div id="activeFriendStatus" class="chat-friend-status">جاري الفحص...</div>
         </div>
       </div>
     </div>
@@ -470,7 +479,6 @@
 </div>
 
 <script>
-  // بيانات Firebase الخاصة بمشروعك
   const firebaseConfig = {
     apiKey: "AIzaSyBG7pwVcdC1e0Chq4yUDbypeLIvzYn3fiI",
     authDomain: "m7chat-8f7ed.firebaseapp.com",
@@ -485,7 +493,6 @@
   firebase.initializeApp(firebaseConfig);
   const rtdb = firebase.database();
 
-  // الكود التعريفي وقائمة الأصدقاء
   let myPin = localStorage.getItem("m7_my_pin");
   if (!myPin) {
     myPin = Math.floor(1000 + Math.random() * 9000).toString();
@@ -493,9 +500,20 @@
   }
   document.getElementById("myCodeDisplay").textContent = myPin;
 
+  // نظام تتبع التواجد (Online/Offline Presence)
+  const myStatusRef = rtdb.ref("status/" + myPin);
+  const connectedRef = rtdb.ref(".info/connected");
+  connectedRef.on("value", snap => {
+    if (snap.val() === true) {
+      myStatusRef.onDisconnect().set({ online: false, lastChanged: Date.now() });
+      myStatusRef.set({ online: true, lastChanged: Date.now() });
+    }
+  });
+
   let contacts = JSON.parse(localStorage.getItem("m7_contacts") || "[]");
   let activeChatPin = null;
   let activeChatListener = null;
+  let activeStatusListener = null;
 
   function getRoomId(pin1, pin2) {
     return [pin1, pin2].sort().join("_");
@@ -516,7 +534,7 @@
     if (exist) {
       exist.name = name;
     } else {
-      contacts.unshift({ pin, name, lastMsg: "اضغط لبدء الشات", unread: 0 });
+      contacts.unshift({ pin, name, lastMsg: "اضغط لبدء الشات", unread: 0, lastReadTime: 0 });
     }
     document.getElementById("newFriendName").value = "";
     document.getElementById("newFriendPin").value = "";
@@ -550,7 +568,7 @@
             <button class="del-contact-btn" onclick="deleteContact(event, '${c.pin}')">✕</button>
           </div>
           <div class="contact-bottom">
-            <div class="last-msg">${c.lastMsg}</div>
+            <div class="last-msg">${c.lastMsg || "لا توجد رسائل"}</div>
             ${c.unread > 0 ? `<div class="unread-badge">${c.unread}</div>` : ''}
           </div>
         </div>
@@ -559,7 +577,6 @@
     });
   }
 
-  // الاستماع للرسائل في الخلفية وتحديث القائمة
   function listenToRoomUpdates(friendPin) {
     const roomId = getRoomId(myPin, friendPin);
     rtdb.ref("rooms/" + roomId + "/lastMessage").on("value", snapshot => {
@@ -568,8 +585,11 @@
       const contact = contacts.find(c => c.pin === friendPin);
       if (contact) {
         contact.lastMsg = last.senderPin === myPin ? "أنت: " + last.preview : last.preview;
-        if (activeChatPin !== friendPin && last.senderPin !== myPin && last.time !== contact.lastReadTime) {
-          contact.unread = (contact.unread || 0) + 1;
+        if (activeChatPin !== friendPin && last.senderPin !== myPin) {
+          if (!contact.lastReadTime || last.timestamp > contact.lastReadTime) {
+            contact.unread = (contact.unread || 0) + 1;
+            contact.lastReadTime = last.timestamp;
+          }
         }
         saveContacts();
       }
@@ -578,7 +598,6 @@
 
   contacts.forEach(c => listenToRoomUpdates(c.pin));
 
-  // فتح الشات وإرسال الرسائل
   function openChat(pin) {
     activeChatPin = pin;
     const contact = contacts.find(c => c.pin === pin);
@@ -592,16 +611,51 @@
     document.getElementById("chatScreen").classList.add("active");
     cancelReply();
 
+    // متابعة حالة الأونلاين للطرف الثاني
+    const statusEl = document.getElementById("activeFriendStatus");
+    if (activeStatusListener) activeStatusListener.off();
+    activeStatusListener = rtdb.ref("status/" + pin);
+    activeStatusListener.on("value", snap => {
+      const st = snap.val();
+      if (st && st.online === true) {
+        statusEl.textContent = "متصل الآن 🟢";
+        statusEl.className = "chat-friend-status online";
+      } else {
+        statusEl.textContent = "غير متصل ⚪";
+        statusEl.className = "chat-friend-status";
+      }
+    });
+
     const chatBox = document.getElementById("chatBox");
     chatBox.innerHTML = "";
     const roomId = getRoomId(myPin, pin);
 
     if (activeChatListener) activeChatListener.off();
 
-    activeChatListener = rtdb.ref("rooms/" + roomId + "/messages");
+    const messagesRef = rtdb.ref("rooms/" + roomId + "/messages");
+    activeChatListener = messagesRef;
+
+    // استماع الرسائل وتحديث حالة القراءة (Seen)
     activeChatListener.on("child_added", snapshot => {
       const msg = snapshot.val();
-      renderMessage(msg);
+      const msgKey = snapshot.key;
+      
+      // إذا كانت الرسالة من الطرف الآخر، علمها كمقروءة فوراً في السيرفر
+      if (msg.senderPin !== myPin && !msg.seen) {
+        rtdb.ref("rooms/" + roomId + "/messages/" + msgKey + "/seen").set(true);
+      }
+      renderMessage(msg, msgKey);
+    });
+
+    // استماع التغيير في علامات الصح لما الطرف الآخر يقرأ
+    activeChatListener.on("child_changed", snapshot => {
+      const msg = snapshot.val();
+      const msgKey = snapshot.key;
+      const tickEl = document.getElementById("ticks-" + msgKey);
+      if (tickEl && msg.seen) {
+        tickEl.innerHTML = "✓✓";
+        tickEl.className = "ticks seen";
+      }
     });
   }
 
@@ -609,6 +663,7 @@
     activeChatPin = null;
     cancelReply();
     if (activeChatListener) activeChatListener.off();
+    if (activeStatusListener) activeStatusListener.off();
     document.getElementById("chatScreen").classList.remove("active");
     document.getElementById("contactsScreen").classList.add("active");
     renderContactsList();
@@ -632,20 +687,23 @@
     if (!activeChatPin) return;
     const roomId = getRoomId(myPin, activeChatPin);
     const now = new Date();
+    const timestamp = Date.now();
+    
     const msgData = {
       senderPin: myPin,
       type: type,
       content: content,
       replyTo: currentReplyObj,
       time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      timestamp: Date.now()
+      timestamp: timestamp,
+      seen: false
     };
 
     rtdb.ref("rooms/" + roomId + "/messages").push(msgData);
     rtdb.ref("rooms/" + roomId + "/lastMessage").set({
       senderPin: myPin,
       preview: previewText,
-      time: Date.now()
+      timestamp: timestamp
     });
 
     cancelReply();
@@ -721,7 +779,7 @@
     }
   }
 
-  function renderMessage(msg) {
+  function renderMessage(msg, msgKey) {
     const chatBox = document.getElementById("chatBox");
     const isMe = msg.senderPin === myPin;
     const wrapper = document.createElement("div");
@@ -766,7 +824,15 @@
     meta.appendChild(replyBtn);
 
     const timeSpan = document.createElement("span");
-    timeSpan.innerHTML = `${msg.time} ${isMe ? '<span class="ticks">✓✓</span>' : ''}`;
+    let tickHtml = "";
+    if (isMe) {
+      if (msg.seen) {
+        tickHtml = `<span id="ticks-${msgKey}" class="ticks seen">✓✓</span>`;
+      } else {
+        tickHtml = `<span id="ticks-${msgKey}" class="ticks">✓</span>`;
+      }
+    }
+    timeSpan.innerHTML = `${msg.time} ${tickHtml}`;
     meta.appendChild(timeSpan);
 
     bubble.appendChild(meta);
