@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#202c33">
+  <title>واتساب P2P متعدد المحادثات</title>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      background-color: #0b141a;
+      color: #e9edef;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100dvh;
+      overflow: hidden;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      height: 100dvh;
+      background-color: #111b21;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #222d34;
+      border-right: 1px solid #222d34;
+      position: relative;
+    }
+
+    /* القوائم والشاشات */
+    .screen {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+    .screen.active {
+      display: flex;
+    }
+
+    /* الهيدر العام */
+    .header {
+      background-color: #202c33;
+      padding: 12px 14px;
+      border-bottom: 1px solid #2a3942;
+      z-index: 10;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #e9edef;
+    }
+    .my-code-badge {
+      background-color: #111b21;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #8696a0;
+      border: 1px solid #2a3942;
+    }
+    .my-code-badge span {
+      color: #00a884;
+      font-weight: bold;
+      font-size: 16px;
+      letter-spacing: 1px;
+      margin-right: 4px;
+      user-select: all;
+    }
+
+    /* نموذج إضافة صديق */
+    .add-contact-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .add-contact-bar input {
+      background-color: #2a3942;
+      border: none;
+      padding: 9px 10px;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+    .input-name {
+      flex: 1.2;
+    }
+    .input-pin {
+      flex: 1;
+    }
+    .btn {
+      background-color: #00a884;
+      color: #111b21;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #06cf9c;
+    }
+
+    /* قائمة الشاتات */
+    .contacts-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid #202c33;
+      cursor: pointer;
+      transition: background 0.15s;
+      gap: 12px;
+    }
+    .contact-item:hover {
+      background-color: #202c33;
+    }
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background-color: #2a3942;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 19px;
+      font-weight: bold;
+      color: #00a884;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .online-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #667781;
+      position: absolute;
+      bottom: 1px;
+      left: 1px;
+      border: 2px solid #111b21;
+    }
+    .online-dot.online {
+      background-color: #00a884;
+    }
+    .contact-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .contact-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .contact-name {
+      font-size: 15.5px;
+      font-weight: bold;
+      color: #e9edef;
+    }
+    .contact-pin-tag {
+      font-size: 11px;
+      color: #8696a0;
+      font-weight: normal;
+      margin-right: 5px;
+    }
+    .contact-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .last-msg {
+      font-size: 13px;
+      color: #8696a0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 85%;
+    }
+    .unread-badge {
+      background-color: #00a884;
+      color: #111b21;
+      font-size: 11.5px;
+      font-weight: bold;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 6px;
+    }
+    .del-contact-btn {
+      background: none;
+      border: none;
+      color: #667781;
+      font-size: 14px;
+      padding: 4px 6px;
+      cursor: pointer;
+    }
+    .del-contact-btn:hover {
+      color: #ea4335;
+    }
+    .empty-list {
+      text-align: center;
+      color: #8696a0;
+      margin-top: 60px;
+      padding: 0 20px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* هيدر شاشة الشات الداخلي */
+    .chat-header {
+      background-color: #202c33;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #2a3942;
+    }
+    .chat-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .back-btn {
+      background: none;
+      border: none;
+      color: #e9edef;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 6px;
+    }
+    .chat-friend-details h4 {
+      font-size: 15.5px;
+      color: #e9edef;
+    }
+    .chat-friend-status {
+      font-size: 11.5px;
+      color: #8696a0;
+    }
+    .chat-friend-status.online {
+      color: #00a884;
+    }
+    .clear-btn {
+      background: none;
+      border: 1px solid #3b4a54;
+      color: #8696a0;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* صندوق الرسائل */
+    .chat-box {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background-color: #0b141a;
+      background-image: radial-gradient(#202c33 1px, transparent 1px);
+      background-size: 20px 20px;
+      scroll-behavior: smooth;
+    }
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      max-width: 82%;
+      position: relative;
+    }
+    .msg-wrapper.me {
+      align-self: flex-start;
+    }
+    .msg-wrapper.friend {
+      align-self: flex-end;
+    }
+    .msg {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 14.5px;
+      line-height: 1.45;
+      position: relative;
+      word-wrap: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .msg-wrapper.me .msg {
+      background-color: #005c4b;
+      color: #e9edef;
+      border-top-right-radius: 0;
+    }
+    .msg-wrapper.friend .msg {
+      background-color: #202c33;
+      color: #e9edef;
+      border-top-left-radius: 0;
+    }
+    .quoted-msg {
+      background-color: rgba(0, 0, 0, 0.25);
+      border-right: 3px solid #00a884;
+      padding: 5px 8px;
+      border-radius: 5px;
+      margin-bottom: 6px;
+      font-size: 12.5px;
+      color: #d1d7db;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quoted-msg strong {
+      display: block;
+      color: #00a884;
+      font-size: 11.5px;
+      margin-bottom: 2px;
+    }
+    .msg img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 8px;
+      display: block;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+    .msg audio {
+      height: 36px;
+      max-width: 220px;
+      margin-top: 4px;
+      display: block;
+    }
+    .msg-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 10.5px;
+      color: rgba(233, 237, 239, 0.65);
+    }
+    .reply-trigger {
+      background: none;
+      border: none;
+      color: rgba(233, 237, 239, 0.7);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 0 4px;
+    }
+    .ticks {
+      font-weight: bold;
+      letter-spacing: -2px;
+      margin-right: 4px;
+    }
+    .ticks.pending { color: #8696a0; }
+    .ticks.delivered { color: #53bdeb; }
+
+    .sys-msg {
+      align-self: center;
+      background-color: #182229;
+      color: #ffd279;
+      font-size: 11.5px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 90%;
+    }
+
+    /* شريط الرد */
+    .reply-preview-bar {
+      background-color: #182229;
+      border-top: 1px solid #2a3942;
+      border-right: 4px solid #00a884;
+      padding: 8px 12px;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .reply-preview-content {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .reply-preview-content strong {
+      color: #00a884;
+      display: block;
+      font-size: 12px;
+    }
+    .close-reply {
+      background: none;
+      border: none;
+      color: #8696a0;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0 8px;
+    }
+
+    /* شريط الإدخال */
+    .input-area {
+      background-color: #202c33;
+      padding: 8px 10px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .icon-btn {
+      background-color: #2a3942;
+      color: #e9edef;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .icon-btn.recording {
+      background-color: #ea4335;
+      color: #fff;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .input-area input[type="text"] {
+      flex: 1;
+      background-color: #2a3942;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 20px;
+      color: #fff;
+      font-size: 14.5px;
+      outline: none;
+      min-width: 0;
+    }
+    .send-btn {
+      background-color: #00a884;
+      color: #111b21;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .highlight-msg .msg {
+      outline: 2px solid #00a884;
+      transition: outline 0.5s;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ==================== الشاشة 1: قائمة المحادثات ==================== -->
+  <div id="contactsScreen" class="screen active">
+    <div class="header">
+      <div class="top-bar">
+        <div class="app-title">المحادثات 💬</div>
+        <div class="my-code-badge">
+          كودك: <span id="myCodeDisplay">...</span>
+        </div>
+      </div>
+      <div class="add-contact-bar">
+        <input type="text" id="newFriendName" class="input-name" placeholder="اسم صاحبك (مثلاً: أحمد)" />
+        <input type="number" id="newFriendPin" class="input-pin" placeholder="كوده (4 أرقام)" />
+        <button class="btn" onclick="addContact()">+ إضافة</button>
+      </div>
+    </div>
+
+    <div id="contactsList" class="contacts-list"></div>
+  </div>
+
+  <!-- ==================== الشاشة 2: داخل المحادثة ==================== -->
+  <div id="chatScreen" class="screen">
+    <div class="chat-header">
+      <div class="chat-header-right">
+        <button class="back-btn" onclick="closeChat()" title="رجوع للقائمة">➔</button>
+        <div class="chat-friend-details">
+          <h4 id="activeFriendName">اسم الصديق</h4>
+          <div id="activeFriendStatus" class="chat-friend-status">غير متصل</div>
+        </div>
+      </div>
+      <button class="clear-btn" onclick="clearCurrentChat()">مسح الشات</button>
+    </div>
+
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="reply-preview-bar" id="replyPreviewBar">
+      <div class="reply-preview-content">
+        <strong id="replySenderName">رد على رسالة</strong>
+        <span id="replyTextPreview"></span>
+      </div>
+      <button class="close-reply" onclick="cancelReply()">✕</button>
+    </div>
+
+    <div class="input-area">
+      <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)" />
+      <button class="icon-btn" onclick="document.getElementById('imageInput').click()" title="إرسال صورة">📷</button>
+      <button class="icon-btn" id="micBtn" onclick="toggleRecording()" title="تسجيل ريكورد صوتي">🎤</button>
+      <input type="text" id="msgInput" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter') sendTextMessage()" />
+      <button class="send-btn" onclick="sendTextMessage()">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ========================
+  // 1. إدارة كودك وقائمة الأصدقاء
+  // ========================
+  const PREFIX = "wa-multi-eg-";
+  let myPin = localStorage.getItem("wa_my_pin");
+  if (!myPin) {
+    myPin = Math.floor(1000 + Math.random() * 9000).toString();
+    localStorage.setItem("wa_my_pin", myPin);
+  }
+  document.getElementById("myCodeDisplay").textContent = myPin;
+
+  // قائمة الأصدقاء: [{ pin, name, unread, lastMsg }]
+  let contacts = JSON.parse(localStorage.getItem("wa_contacts_list") || "[]");
+  let activeChatPin = null; // الكود الخاص بالصديق المفتوح حالياً
+  const connections = {};   // حفظ جميع الاتصالات المفتوحة { pin: DataConnection }
+
+  function saveContacts() {
+    localStorage.setItem("wa_contacts_list", JSON.stringify(contacts));
+    renderContactsList();
+  }
+
+  function addContact() {
+    const nameInput = document.getElementById("newFriendName");
+    const pinInput = document.getElementById("newFriendPin");
+    const name = nameInput.value.trim();
+    const pin = pinInput.value.trim();
+
+    if (!name || !pin) {
+      alert("اكتب اسم صاحبك والكود بتاعه الأول!");
+      return;
+    }
+    if (pin === myPin) {
+      alert("ده كودك أنت! اكتب كود صاحبك.");
+      return;
+    }
+
+    const existing = contacts.find(c => c.pin === pin);
+    if (existing) {
+      existing.name = name;
+    } else {
+      contacts.unshift({
+        pin: pin,
+        name: name,
+        unread: 0,
+        lastMsg: "اضغط لبدء المحادثة..."
+      });
+    }
+
+    nameInput.value = "";
+    pinInput.value = "";
+    saveContacts();
+    connectToFriendPin(pin);
+  }
+
+  function deleteContact(e, pin) {
+    e.stopPropagation();
+    if (!confirm("حذف هذا الصديق من القائمة؟")) return;
+    contacts = contacts.filter(c => c.pin !== pin);
+    saveContacts();
+  }
+
+  function renderContactsList() {
+    const listEl = document.getElementById("contactsList");
+    listEl.innerHTML = "";
+
+    if (contacts.length === 0) {
+      listEl.innerHTML = `<div class="empty-list">قائمة محادثاتك فارغة.<br>أضف أصدقاءك بالأعلى باستخدام الاسم والكود المكون من 4 أرقام للتحدث معهم والتنقل بين شاتاتهم!</div>`;
+      return;
+    }
+
+    contacts.forEach(c => {
+      const isOnline = connections[c.pin] && connections[c.pin].open;
+      const item = document.createElement("div");
+      item.className = "contact-item";
+      item.onclick = () => openChat(c.pin);
+
+      const firstLetter = c.name.charAt(0);
+      item.innerHTML = `
+        <div class="avatar">
+          ${firstLetter}
+          <span class="online-dot ${isOnline ? 'online' : ''}"></span>
+        </div>
+        <div class="contact-info">
+          <div class="contact-top">
+            <div class="contact-name">${c.name} <span class="contact-pin-tag">#${c.pin}</span></div>
+            <button class="del-contact-btn" onclick="deleteContact(event, '${c.pin}')" title="حذف">✕</button>
+          </div>
+          <div class="contact-bottom">
+            <div class="last-msg">${c.lastMsg || 'لا توجد رسائل'}</div>
+            ${c.unread > 0 ? `<div class="unread-badge">${c.unread}</div>` : ''}
+          </div>
+        </div>
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  // ========================
+  // 2. التنقل بين الشاشات
+  // ========================
+  function openChat(pin) {
+    activeChatPin = pin;
+    const contact = contacts.find(c => c.pin === pin);
+    if (contact) {
+      contact.unread = 0;
+      saveContacts();
+      document.getElementById("activeFriendName").textContent = contact.name;
+    }
+
+    updateActiveChatHeaderStatus();
+    document.getElementById("contactsScreen").classList.remove("active");
+    document.getElementById("chatScreen").classList.add("active");
+    cancelReply();
+    loadChatMessages(pin);
+    connectToFriendPin(pin);
+  }
+
+  function closeChat() {
+    activeChatPin = null;
+    cancelReply();
+    document.getElementById("chatScreen").classList.remove("active");
+    document.getElementById("contactsScreen").classList.add("active");
+    renderContactsList();
+  }
+
+  function updateActiveChatHeaderStatus() {
+    if (!activeChatPin) return;
+    const statusEl = document.getElementById("activeFriendStatus");
+    const isOnline = connections[activeChatPin] && connections[activeChatPin].open;
+    if (isOnline) {
+      statusEl.textContent = "متصل الآن 🟢";
+      statusEl.className = "chat-friend-status online";
+    } else {
+      statusEl.textContent = "غير متصل (الرسائل ستصل فور فتحه)";
+      statusEl.className = "chat-friend-status";
+    }
+  }
+
+  // ========================
+  // 3. قاعدة بيانات IndexedDB
+  // ========================
+  let db;
+  const dbReq = indexedDB.open("WhatsAppMultiP2PDB", 1);
+  dbReq.onupgradeneeded = (e) => {
+    const database = e.target.result;
+    if (!database.objectStoreNames.contains("messages")) {
+      database.createObjectStore("messages", { keyPath: "id" });
+    }
+  };
+  dbReq.onsuccess = (e) => {
+    db = e.target.result;
+    renderContactsList();
+    initPeer();
+  };
+
+  function saveMsgToDB(msgObj) {
+    if (!db) return;
+    const tx = db.transaction("messages", "readwrite");
+    tx.objectStore("messages").put(msgObj);
+  }
+
+  function updateMsgStatusInDB(msgId, newStatus) {
+    if (!db) return;
+    const tx = db.transaction("messages", "readwrite");
+    const store = tx.objectStore("messages");
+    const getReq = store.get(msgId);
+    getReq.onsuccess = () => {
+      const data = getReq.result;
+      if (data) {
+        data.status = newStatus;
+        store.put(data);
+      }
+    };
+  }
+
+  function getMessagesByChatPin(chatPin, callback) {
+    if (!db) return callback([]);
+    const tx = db.transaction("messages", "readonly");
+    const store = tx.objectStore("messages");
+    const req = store.getAll();
+    req.onsuccess = () => {
+      const all = req.result || [];
+      const filtered = all
+        .filter(m => m.chatPin === chatPin)
+        .sort((a, b) => a.timestamp - b.timestamp);
+      callback(filtered);
+    };
+  }
+
+  function clearCurrentChat() {
+    if (!activeChatPin || !confirm("مسح سجل المحادثة مع هذا الصديق؟")) return;
+    const tx = db.transaction("messages", "readwrite");
+    const store = tx.objectStore("messages");
+    const req = store.getAll();
+    req.onsuccess = () => {
+      (req.result || []).forEach(m => {
+        if (m.chatPin === activeChatPin) store.delete(m.id);
+      });
+      document.getElementById("chatBox").innerHTML = "";
+      addSystemMessage("تم مسح سجل هذه المحادثة.");
+    };
+  }
+
+  // ========================
+  // 4. شبكة الـ P2P المتعددة (PeerJS)
+  // ========================
+  let peer = null;
+
+  function initPeer() {
+    peer = new Peer(PREFIX + myPin);
+
+    peer.on("open", () => {
+      connectAllContacts();
+    });
+
+    peer.on("connection", (conn) => {
+      setupConnection(conn);
+    });
+
+    // فحص دوري كل 5 ثوانٍ للاتصال بكل الأصدقاء المضافين
+    setInterval(connectAllContacts, 5000);
+  }
+
+  function connectAllContacts() {
+    if (!peer || peer.disconnected) return;
+    contacts.forEach(c => connectToFriendPin(c.pin));
+  }
+
+  function connectToFriendPin(pin) {
+    if (!peer || peer.disconnected || !pin) return;
+    if (connections[pin] && connections[pin].open) return;
+    const conn = peer.connect(PREFIX + pin, { reliable: true });
+    setupConnection(conn);
+  }
+
+  function setupConnection(conn) {
+    const remotePin = conn.peer.replace(PREFIX, "");
+
+    conn.on("open", () => {
+      connections[remotePin] = conn;
+
+      // إذا اتصل بك صديق غير مسجل في قائمتك، أضفه تلقائياً
+      let contact = contacts.find(c => c.pin === remotePin);
+      if (!contact) {
+        contact = {
+          pin: remotePin,
+          name: "صديق (" + remotePin + ")",
+          unread: 0,
+          lastMsg: "متصل الآن"
+        };
+        contacts.unshift(contact);
+      }
+
+      saveContacts();
+      updateActiveChatHeaderStatus();
+      syncPendingMessagesForPin(remotePin);
+    });
+
+    conn.on("data", (packet) => {
+      if (!packet || !packet.packetType) return;
+
+      if (packet.packetType === "MSG") {
+        const incoming = packet.payload;
+        incoming.chatPin = remotePin;
+        incoming.sender = "friend";
+        incoming.status = "delivered";
+
+        saveMsgToDB(incoming);
+
+        // تحديث آخر رسالة والعداد في القائمة الخارجية
+        let contact = contacts.find(c => c.pin === remotePin);
+        if (contact) {
+          contact.lastMsg = incoming.type === "text" ? incoming.content : (incoming.type === "image" ? "📷 صورة" : "🎤 ريكورد صوتي");
+          if (activeChatPin !== remotePin) {
+            contact.unread = (contact.unread || 0) + 1;
+            playNotificationBeep();
+          }
+          saveContacts();
+        }
+
+        // لو فاتح شات هذا الصديق حالياً، اعرض الرسالة فوراً
+        if (activeChatPin === remotePin && !document.getElementById("msg-" + incoming.id)) {
+          renderMessageOnScreen(incoming);
+        }
+
+        // إرسال إشعار استلام (علامتين صح)
+        conn.send({ packetType: "ACK", msgId: incoming.id });
+      } else if (packet.packetType === "ACK") {
+        updateMsgStatusInDB(packet.msgId, "delivered");
+        const tickEl = document.getElementById("ticks-" + packet.msgId);
+        if (tickEl) {
+          tickEl.textContent = "✓✓";
+          tickEl.className = "ticks delivered";
+        }
+      }
+    });
+
+    conn.on("close", () => {
+      delete connections[remotePin];
+      renderContactsList();
+      updateActiveChatHeaderStatus();
+    });
+  }
+
+  function syncPendingMessagesForPin(pin) {
+    getMessagesByChatPin(pin, (messages) => {
+      const conn = connections[pin];
+      if (!conn || !conn.open) return;
+      messages.forEach(m => {
+        if (m.sender === "me" && m.status === "pending") {
+          conn.send({ packetType: "MSG", payload: m });
+        }
+      });
+    });
+  }
+
+  // نغمة خفيفة عند وصول رسالة في شات آخر
+  function playNotificationBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(660, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+    } catch (e) {}
+  }
+
+  // ========================
+  // 5. إرسال الرسائل والوسائط والردود
+  // ========================
+  let currentReplyObj = null;
+
+  function setReply(msgId, sender, previewText) {
+    currentReplyObj = { id: msgId, sender, text: previewText };
+    document.getElementById("replySenderName").textContent =
+      sender === "me" ? "رد على نفسك" : "رد على صديقك";
+    document.getElementById("replyTextPreview").textContent = previewText;
+    document.getElementById("replyPreviewBar").style.display = "flex";
+    document.getElementById("msgInput").focus();
+  }
+
+  function cancelReply() {
+    currentReplyObj = null;
+    document.getElementById("replyPreviewBar").style.display = "none";
+  }
+
+  function createAndDispatchMessage(type, content) {
+    if (!activeChatPin) return;
+    const now = new Date();
+    const msgObj = {
+      id: "m_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+      chatPin: activeChatPin,
+      sender: "me",
+      type: type,
+      content: content,
+      replyTo: currentReplyObj,
+      time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: Date.now(),
+      status: "pending"
+    };
+
+    saveMsgToDB(msgObj);
+    renderMessageOnScreen(msgObj);
+    cancelReply();
+
+    // تحديث آخر رسالة في القائمة الخارجية
+    const contact = contacts.find(c => c.pin === activeChatPin);
+    if (contact) {
+      contact.lastMsg = "أنت: " + (type === "text" ? content : (type === "image" ? "📷 صورة" : "🎤 ريكورد صوتي"));
+      saveContacts();
+    }
+
+    const conn = connections[activeChatPin];
+    if (conn && conn.open) {
+      conn.send({ packetType: "MSG", payload: msgObj });
+    }
+  }
+
+  function sendTextMessage() {
+    const input = document.getElementById("msgInput");
+    const text = input.value.trim();
+    if (!text) return;
+    createAndDispatchMessage("text", text);
+    input.value = "";
+    input.focus();
+  }
+
+  function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_SIZE = 800;
+        let w = img.width;
+        let h = img.height;
+        if (w > h && w > MAX_SIZE) {
+          h *= MAX_SIZE / w;
+          w = MAX_SIZE;
+        } else if (h > MAX_SIZE) {
+          w *= MAX_SIZE / h;
+          h = MAX_SIZE;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.72);
+        createAndDispatchMessage("image", compressedDataUrl);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+
+  async function toggleRecording() {
+    const micBtn = document.getElementById("micBtn");
+
+    if (!isRecording) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            createAndDispatchMessage("audio", reader.result);
+          };
+          reader.readAsDataURL(audioBlob);
+          stream.getTracks().forEach((t) => t.stop());
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        micBtn.classList.add("recording");
+        micBtn.textContent = "⏹️";
+        document.getElementById("msgInput").placeholder = "🔴 جاري التسجيل... اضغط ⏹️ للإرسال";
+      } catch (err) {
+        alert("لتشغيل المايكروفون، يجب فتح الملف عبر رابط آمن HTTPS.");
+      }
+    } else {
+      mediaRecorder.stop();
+      isRecording = false;
+      micBtn.classList.remove("recording");
+      micBtn.textContent = "🎤";
+      document.getElementById("msgInput").placeholder = "اكتب رسالة...";
+    }
+  }
+
+  // ========================
+  // 6. عرض الرسائل داخل الشات المفتوح
+  // ========================
+  function loadChatMessages(chatPin) {
+    const chatBox = document.getElementById("chatBox");
+    chatBox.innerHTML = "";
+    getMessagesByChatPin(chatPin, (messages) => {
+      if (messages.length === 0) {
+        addSystemMessage("ابدأ المحادثة الآن! يمكنك إرسال رسائل وصور وريكوردات حتى لو صديقك غير متصل.");
+      } else {
+        messages.forEach(m => renderMessageOnScreen(m));
+      }
+    });
+  }
+
+  function renderMessageOnScreen(msg) {
+    const chatBox = document.getElementById("chatBox");
+    const wrapper = document.createElement("div");
+    wrapper.className = "msg-wrapper " + msg.sender;
+    wrapper.id = "msg-" + msg.id;
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg";
+
+    if (msg.replyTo) {
+      const quoteDiv = document.createElement("div");
+      quoteDiv.className = "quoted-msg";
+      const senderTitle = document.createElement("strong");
+      senderTitle.textContent = msg.replyTo.sender === "me" ? "أنت" : "صديقك";
+      const quoteText = document.createElement("span");
+      quoteText.textContent = msg.replyTo.text;
+      quoteDiv.appendChild(senderTitle);
+      quoteDiv.appendChild(quoteText);
+      quoteDiv.onclick = () => scrollToMessage(msg.replyTo.id);
+      bubble.appendChild(quoteDiv);
+    }
+
+    let replySummary = "";
+    if (msg.type === "text") {
+      const txt = document.createElement("div");
+      txt.textContent = msg.content;
+      bubble.appendChild(txt);
+      replySummary = msg.content;
+    } else if (msg.type === "image") {
+      const img = document.createElement("img");
+      img.src = msg.content;
+      img.onclick = () => {
+        const w = window.open("");
+        w.document.write(`<img src="${msg.content}" style="max-width:100%">`);
+      };
+      bubble.appendChild(img);
+      replySummary = "📷 صورة";
+    } else if (msg.type === "audio") {
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = msg.content;
+      bubble.appendChild(audio);
+      replySummary = "🎤 ريكورد صوتي";
+    }
+
+    const meta = document.createElement("div");
+    meta.className = "msg-meta";
+
+    const replyBtn = document.createElement("button");
+    replyBtn.className = "reply-trigger";
+    replyBtn.textContent = "↩️ رد";
+    replyBtn.onclick = () => setReply(msg.id, msg.sender, replySummary);
+    meta.appendChild(replyBtn);
+
+    const timeAndTicks = document.createElement("span");
+    timeAndTicks.textContent = msg.time + " ";
+
+    if (msg.sender === "me") {
+      const ticks = document.createElement("span");
+      ticks.id = "ticks-" + msg.id;
+      ticks.className = "ticks " + msg.status;
+      ticks.textContent = msg.status === "delivered" ? "✓✓" : "✓";
+      timeAndTicks.appendChild(ticks);
+    }
+
+    meta.appendChild(timeAndTicks);
+    bubble.appendChild(meta);
+    wrapper.appendChild(bubble);
+    chatBox.appendChild(wrapper);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function scrollToMessage(targetId) {
+    const el = document.getElementById("msg-" + targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("highlight-msg");
+      setTimeout(() => el.classList.remove("highlight-msg"), 1500);
+    }
+  }
+
+  function addSystemMessage(text) {
+    const chatBox = document.getElementById("chatBox");
+    const div = document.createElement("div");
+    div.className = "sys-msg";
+    div.textContent = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
