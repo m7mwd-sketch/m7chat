@@ -46,14 +46,16 @@
       flex-direction: column;
       width: 100%;
       height: 100%;
+      position: relative;
     }
     .screen.active {
       display: flex;
     }
 
+    /* الهيدر وشريط الإضافة المتجاوب مع الموبايل */
     .header {
       background-color: #202c33;
-      padding: 12px 14px;
+      padding: 10px 12px;
       border-bottom: 1px solid #2a3942;
       z-index: 10;
     }
@@ -63,22 +65,22 @@
       align-items: center;
     }
     .app-title {
-      font-size: 18px;
+      font-size: 17px;
       font-weight: bold;
       color: #e9edef;
     }
     .my-code-badge {
       background-color: #111b21;
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12.5px;
       color: #8696a0;
       border: 1px solid #2a3942;
     }
     .my-code-badge span {
       color: #00a884;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 15px;
       letter-spacing: 1px;
       margin-right: 4px;
       user-select: all;
@@ -88,30 +90,40 @@
       display: flex;
       gap: 6px;
       margin-top: 10px;
+      width: 100%;
     }
     .add-contact-bar input {
       background-color: #2a3942;
-      border: none;
-      padding: 9px 10px;
+      border: 1px solid #374248;
+      padding: 8px 10px;
       border-radius: 6px;
       color: #fff;
       font-size: 13px;
       outline: none;
+      min-width: 0; /* يمنع خروج الخانات خارج شاشة الموبايل */
     }
-    .input-name { flex: 1.2; }
-    .input-pin { flex: 1; }
+    .input-name {
+      flex: 1.3;
+    }
+    .input-pin {
+      flex: 0.9;
+      text-align: center;
+    }
     .btn {
       background-color: #00a884;
       color: #111b21;
       border: none;
-      padding: 8px 14px;
+      padding: 8px 12px;
       border-radius: 6px;
       font-weight: bold;
       font-size: 13px;
       cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
-    .btn:hover { background-color: #06cf9c; }
+    .btn:active { background-color: #06cf9c; }
 
+    /* قائمة المحادثات */
     .contacts-list {
       flex: 1;
       overflow-y: auto;
@@ -152,15 +164,18 @@
       margin-bottom: 4px;
     }
     .contact-name {
-      font-size: 15.5px;
+      font-size: 15px;
       font-weight: bold;
       color: #e9edef;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .contact-pin-tag {
       font-size: 11px;
       color: #8696a0;
       font-weight: normal;
-      margin-right: 5px;
+      margin-right: 4px;
     }
     .contact-bottom {
       display: flex;
@@ -173,7 +188,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 85%;
+      max-width: 82%;
     }
     .unread-badge {
       background-color: #00a884;
@@ -196,7 +211,6 @@
       padding: 4px 6px;
       cursor: pointer;
     }
-    .del-contact-btn:hover { color: #ea4335; }
     .empty-list {
       text-align: center;
       color: #8696a0;
@@ -206,6 +220,7 @@
       line-height: 1.6;
     }
 
+    /* هيدر الشات */
     .chat-header {
       background-color: #202c33;
       padding: 10px 12px;
@@ -213,6 +228,7 @@
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid #2a3942;
+      z-index: 10;
     }
     .chat-header-right {
       display: flex;
@@ -227,27 +243,45 @@
       cursor: pointer;
       padding: 4px 6px;
     }
+    .friend-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .chat-friend-details h4 {
       font-size: 15.5px;
       color: #e9edef;
     }
+    .rename-btn {
+      background: none;
+      border: none;
+      color: #8696a0;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 2px;
+    }
     .chat-friend-status {
       font-size: 12px;
       color: #8696a0;
-      transition: color 0.3s;
+      transition: color 0.2s;
     }
     .chat-friend-status.online {
       color: #00a884;
       font-weight: bold;
     }
+    .chat-friend-status.typing {
+      color: #53bdeb;
+      font-weight: bold;
+    }
 
+    /* صندوق الرسائل */
     .chat-box {
       flex: 1;
       padding: 14px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       background-color: #0b141a;
       background-image: radial-gradient(#202c33 1px, transparent 1px);
       background-size: 20px 20px;
@@ -256,10 +290,12 @@
     .msg-wrapper {
       display: flex;
       flex-direction: column;
-      max-width: 82%;
+      max-width: 84%;
+      position: relative;
     }
     .msg-wrapper.me { align-self: flex-start; }
     .msg-wrapper.friend { align-self: flex-end; }
+
     .msg {
       padding: 8px 10px;
       border-radius: 10px;
@@ -267,6 +303,7 @@
       line-height: 1.45;
       word-wrap: break-word;
       box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      position: relative;
     }
     .msg-wrapper.me .msg {
       background-color: #005c4b;
@@ -278,6 +315,17 @@
       color: #e9edef;
       border-top-left-radius: 0;
     }
+    .deleted-text {
+      font-style: italic;
+      color: rgba(233, 237, 239, 0.6);
+      font-size: 13.5px;
+    }
+    .edited-tag {
+      font-size: 10px;
+      color: rgba(233, 237, 239, 0.6);
+      margin-right: 4px;
+    }
+
     .quoted-msg {
       background-color: rgba(0, 0, 0, 0.25);
       border-right: 3px solid #00a884;
@@ -299,6 +347,7 @@
       border-radius: 8px;
       display: block;
       margin-bottom: 4px;
+      cursor: pointer;
     }
     .msg audio {
       height: 36px;
@@ -306,22 +355,67 @@
       margin-top: 4px;
       display: block;
     }
+
+    /* زر الصورة لمرة واحدة */
+    .view-once-btn {
+      background-color: rgba(0, 0, 0, 0.25);
+      border: 1px dashed #00a884;
+      color: #e9edef;
+      padding: 10px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .view-once-btn.opened {
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #8696a0;
+      cursor: default;
+      font-weight: normal;
+    }
+    .vo-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #00a884;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 11px;
+      color: #00a884;
+      flex-shrink: 0;
+    }
+    .view-once-btn.opened .vo-icon {
+      border-color: #8696a0;
+      color: #8696a0;
+    }
+
+    /* شريط أدوات الرسالة والريأكت */
     .msg-meta {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      margin-top: 4px;
+      margin-top: 5px;
       font-size: 10.5px;
       color: rgba(233, 237, 239, 0.65);
     }
-    .reply-trigger {
+    .msg-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .action-btn {
       background: none;
       border: none;
-      color: rgba(233, 237, 239, 0.7);
+      color: rgba(233, 237, 239, 0.75);
       cursor: pointer;
       font-size: 12px;
-      padding: 0 4px;
+      padding: 1px 3px;
     }
     .ticks {
       font-weight: bold;
@@ -334,6 +428,66 @@
       color: #53bdeb;
     }
 
+    /* قائمة اختيار الإيموجي والريأكت المعروض */
+    .reaction-bar {
+      display: none;
+      background-color: #2a3942;
+      border: 1px solid #3b4a54;
+      border-radius: 20px;
+      padding: 4px 8px;
+      gap: 8px;
+      margin-top: 4px;
+      width: fit-content;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      z-index: 5;
+    }
+    .reaction-bar.show {
+      display: flex;
+    }
+    .reaction-bar span {
+      font-size: 17px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .reaction-bar span:active {
+      transform: scale(1.3);
+    }
+    .reactions-display {
+      display: flex;
+      gap: 4px;
+      margin-top: -6px;
+      margin-right: 8px;
+      background-color: #182229;
+      border: 1px solid #2a3942;
+      border-radius: 12px;
+      padding: 2px 6px;
+      width: fit-content;
+      font-size: 13px;
+      z-index: 2;
+      cursor: pointer;
+    }
+
+    /* زر النزول لأسفل */
+    .scroll-bottom-btn {
+      position: absolute;
+      bottom: 70px;
+      left: 16px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: #202c33;
+      color: #00a884;
+      border: 1px solid #2a3942;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      z-index: 15;
+    }
+
+    /* شريط الرد على رسالة */
     .reply-preview-bar {
       background-color: #182229;
       border-top: 1px solid #2a3942;
@@ -364,6 +518,7 @@
       padding: 0 8px;
     }
 
+    /* منطقة الكتابة والإرسال */
     .input-area {
       background-color: #202c33;
       padding: 8px 10px;
@@ -421,13 +576,66 @@
       justify-content: center;
       align-items: center;
     }
+
+    /* النوافذ المنبثقة (معاينة الصورة وفتح الصورة لمرة واحدة) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.92);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+    .modal-overlay img {
+      max-width: 95%;
+      max-height: 75dvh;
+      border-radius: 10px;
+      object-fit: contain;
+      margin-bottom: 16px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .modal-btn {
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: none;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .modal-btn.normal {
+      background-color: #00a884;
+      color: #111b21;
+    }
+    .modal-btn.once {
+      background-color: #2a3942;
+      color: #00a884;
+      border: 1px solid #00a884;
+    }
+    .modal-btn.cancel {
+      background-color: #ea4335;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 
 <div class="app-container">
 
-  <!-- قائمة المحادثات -->
+  <!-- الشاشة الرئيسية: قائمة المحادثات -->
   <div id="contactsScreen" class="screen active">
     <div class="header">
       <div class="top-bar">
@@ -451,13 +659,18 @@
       <div class="chat-header-right">
         <button class="back-btn" onclick="closeChat()">➔</button>
         <div class="chat-friend-details">
-          <h4 id="activeFriendName">اسم الصديق</h4>
+          <div class="friend-title-row">
+            <h4 id="activeFriendName">اسم الصديق</h4>
+            <button class="rename-btn" onclick="renameActiveContact()" title="تعديل الاسم">✏️</button>
+          </div>
           <div id="activeFriendStatus" class="chat-friend-status">جاري الفحص...</div>
         </div>
       </div>
     </div>
 
-    <div class="chat-box" id="chatBox"></div>
+    <div class="chat-box" id="chatBox" onscroll="handleChatScroll()"></div>
+
+    <button id="scrollBottomBtn" class="scroll-bottom-btn" onclick="scrollToBottom()">⬇️</button>
 
     <div class="reply-preview-bar" id="replyPreviewBar">
       <div class="reply-preview-content">
@@ -471,11 +684,29 @@
       <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)" />
       <button class="icon-btn" onclick="document.getElementById('imageInput').click()" title="إرسال صورة">📷</button>
       <button class="icon-btn" id="micBtn" onclick="toggleRecording()" title="تسجيل صوت">🎤</button>
-      <input type="text" id="msgInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') sendTextMessage()" />
+      <input type="text" id="msgInput" placeholder="اكتب رسالتك..." oninput="handleTyping()" onkeypress="if(event.key==='Enter') sendTextMessage()" />
       <button class="send-btn" onclick="sendTextMessage()">➤</button>
     </div>
   </div>
 
+</div>
+
+<!-- نافذة معاينة الصورة قبل الإرسال (عادي أو مرة واحدة) -->
+<div id="imgPreviewModal" class="modal-overlay">
+  <img id="previewImgElement" src="" alt="معاينة" />
+  <div class="modal-actions">
+    <button class="modal-btn normal" onclick="confirmSendImage(false)">إرسال عادي ➤</button>
+    <button class="modal-btn once" onclick="confirmSendImage(true)">مرة واحدة ①</button>
+    <button class="modal-btn cancel" onclick="closeImagePreview()">إلغاء ✕</button>
+  </div>
+</div>
+
+<!-- نافذة عرض الصورة لمرة واحدة -->
+<div id="viewOnceModal" class="modal-overlay">
+  <img id="viewOnceImgElement" src="" alt="صورة لمرة واحدة" />
+  <div class="modal-actions">
+    <button class="modal-btn cancel" onclick="closeViewOnceModal()">إغلاق الصورة ✕</button>
+  </div>
 </div>
 
 <script>
@@ -500,10 +731,27 @@
   }
   document.getElementById("myCodeDisplay").textContent = myPin;
 
+  // نغمة إشعار خفيفة عبر Web Audio API
+  function playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(680, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } catch (e) {}
+  }
+
   // نظام تتبع التواجد (Online/Offline Presence)
   const myStatusRef = rtdb.ref("status/" + myPin);
-  const connectedRef = rtdb.ref(".info/connected");
-  connectedRef.on("value", snap => {
+  rtdb.ref(".info/connected").on("value", snap => {
     if (snap.val() === true) {
       myStatusRef.onDisconnect().set({ online: false, lastChanged: Date.now() });
       myStatusRef.set({ online: true, lastChanged: Date.now() });
@@ -514,6 +762,10 @@
   let activeChatPin = null;
   let activeChatListener = null;
   let activeStatusListener = null;
+  let activeTypingListener = null;
+  let friendIsOnline = false;
+  let friendIsTyping = false;
+  let listenedRooms = {};
 
   function getRoomId(pin1, pin2) {
     return [pin1, pin2].sort().join("_");
@@ -528,13 +780,14 @@
     const name = document.getElementById("newFriendName").value.trim();
     const pin = document.getElementById("newFriendPin").value.trim();
     if (!name || !pin) return alert("اكتب الاسم والكود!");
+    if (pin.length !== 4) return alert("الكود يجب أن يكون 4 أرقام!");
     if (pin === myPin) return alert("ده كودك أنت!");
 
     const exist = contacts.find(c => c.pin === pin);
     if (exist) {
       exist.name = name;
     } else {
-      contacts.unshift({ pin, name, lastMsg: "اضغط لبدء الشات", unread: 0, lastReadTime: 0 });
+      contacts.unshift({ pin, name, lastMsg: "اضغط لبدء الشات", unread: 0, lastReadTime: Date.now() });
     }
     document.getElementById("newFriendName").value = "";
     document.getElementById("newFriendPin").value = "";
@@ -542,10 +795,23 @@
     listenToRoomUpdates(pin);
   }
 
+  function renameActiveContact() {
+    if (!activeChatPin) return;
+    const contact = contacts.find(c => c.pin === activeChatPin);
+    if (!contact) return;
+    const newName = prompt("اكتب الاسم الجديد لصديقك:", contact.name);
+    if (newName && newName.trim()) {
+      contact.name = newName.trim();
+      document.getElementById("activeFriendName").textContent = contact.name;
+      saveContacts();
+    }
+  }
+
   function deleteContact(e, pin) {
     e.stopPropagation();
-    if (!confirm("حذف الصديق؟")) return;
+    if (!confirm("حذف المحادثة من قائمتك؟")) return;
     contacts = contacts.filter(c => c.pin !== pin);
+    rtdb.ref("userChats/" + myPin + "/" + pin).remove();
     saveContacts();
   }
 
@@ -553,7 +819,7 @@
     const listEl = document.getElementById("contactsList");
     listEl.innerHTML = "";
     if (contacts.length === 0) {
-      listEl.innerHTML = `<div class="empty-list">قائمة المحادثات فارغة.<br>أضف صديقك بالاسم وكوده لبدء المحادثة السحابية الدائمة!</div>`;
+      listEl.innerHTML = `<div class="empty-list">قائمة المحادثات فارغة.<br>أضف صديقك بالاسم وكوده، أو انتظر رسالة من أي صديق لتظهر المحادثة تلقائياً!</div>`;
       return;
     }
     contacts.forEach(c => {
@@ -577,7 +843,33 @@
     });
   }
 
+  // استماع تلقائي لأي شخص يرسل لك رسالة حتى لو لم تضفه
+  rtdb.ref("userChats/" + myPin).on("value", snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+    let changed = false;
+    Object.keys(data).forEach(friendPin => {
+      let exist = contacts.find(c => c.pin === friendPin);
+      if (!exist) {
+        exist = {
+          pin: friendPin,
+          name: "صديق #" + friendPin,
+          lastMsg: "رسالة جديدة",
+          unread: 0,
+          lastReadTime: 0
+        };
+        contacts.unshift(exist);
+        changed = true;
+      }
+      listenToRoomUpdates(friendPin);
+    });
+    if (changed) saveContacts();
+  });
+
   function listenToRoomUpdates(friendPin) {
+    if (listenedRooms[friendPin]) return;
+    listenedRooms[friendPin] = true;
+
     const roomId = getRoomId(myPin, friendPin);
     rtdb.ref("rooms/" + roomId + "/lastMessage").on("value", snapshot => {
       const last = snapshot.val();
@@ -585,10 +877,17 @@
       const contact = contacts.find(c => c.pin === friendPin);
       if (contact) {
         contact.lastMsg = last.senderPin === myPin ? "أنت: " + last.preview : last.preview;
-        if (activeChatPin !== friendPin && last.senderPin !== myPin) {
+        if (activeChatPin === friendPin) {
+          contact.unread = 0;
+          contact.lastReadTime = Date.now();
+          if (last.senderPin !== myPin && last.timestamp > Date.now() - 4000) {
+            playNotificationSound();
+          }
+        } else if (last.senderPin !== myPin) {
           if (!contact.lastReadTime || last.timestamp > contact.lastReadTime) {
             contact.unread = (contact.unread || 0) + 1;
             contact.lastReadTime = last.timestamp;
+            playNotificationSound();
           }
         }
         saveContacts();
@@ -597,6 +896,20 @@
   }
 
   contacts.forEach(c => listenToRoomUpdates(c.pin));
+
+  function updateHeaderStatusDisplay() {
+    const statusEl = document.getElementById("activeFriendStatus");
+    if (friendIsTyping) {
+      statusEl.textContent = "يكتب الآن... ✍️";
+      statusEl.className = "chat-friend-status typing";
+    } else if (friendIsOnline) {
+      statusEl.textContent = "متصل الآن 🟢";
+      statusEl.className = "chat-friend-status online";
+    } else {
+      statusEl.textContent = "غير متصل ⚪";
+      statusEl.className = "chat-friend-status";
+    }
+  }
 
   function openChat(pin) {
     activeChatPin = pin;
@@ -611,62 +924,92 @@
     document.getElementById("chatScreen").classList.add("active");
     cancelReply();
 
-    // متابعة حالة الأونلاين للطرف الثاني
-    const statusEl = document.getElementById("activeFriendStatus");
+    friendIsOnline = false;
+    friendIsTyping = false;
+    updateHeaderStatusDisplay();
+
+    // متابعة حالة الأونلاين
     if (activeStatusListener) activeStatusListener.off();
     activeStatusListener = rtdb.ref("status/" + pin);
     activeStatusListener.on("value", snap => {
       const st = snap.val();
-      if (st && st.online === true) {
-        statusEl.textContent = "متصل الآن 🟢";
-        statusEl.className = "chat-friend-status online";
-      } else {
-        statusEl.textContent = "غير متصل ⚪";
-        statusEl.className = "chat-friend-status";
-      }
+      friendIsOnline = !!(st && st.online === true);
+      updateHeaderStatusDisplay();
+    });
+
+    const roomId = getRoomId(myPin, pin);
+
+    // متابعة حالة "يكتب الآن..."
+    if (activeTypingListener) activeTypingListener.off();
+    activeTypingListener = rtdb.ref("rooms/" + roomId + "/typing/" + pin);
+    activeTypingListener.on("value", snap => {
+      friendIsTyping = snap.val() === true;
+      updateHeaderStatusDisplay();
     });
 
     const chatBox = document.getElementById("chatBox");
     chatBox.innerHTML = "";
-    const roomId = getRoomId(myPin, pin);
 
     if (activeChatListener) activeChatListener.off();
-
     const messagesRef = rtdb.ref("rooms/" + roomId + "/messages");
     activeChatListener = messagesRef;
 
-    // استماع الرسائل وتحديث حالة القراءة (Seen)
+    // استماع الرسائل الجديدة
     activeChatListener.on("child_added", snapshot => {
       const msg = snapshot.val();
       const msgKey = snapshot.key;
-      
-      // إذا كانت الرسالة من الطرف الآخر، علمها كمقروءة فوراً في السيرفر
       if (msg.senderPin !== myPin && !msg.seen) {
         rtdb.ref("rooms/" + roomId + "/messages/" + msgKey + "/seen").set(true);
       }
-      renderMessage(msg, msgKey);
+      renderOrUpdateMessage(msg, msgKey, true);
     });
 
-    // استماع التغيير في علامات الصح لما الطرف الآخر يقرأ
+    // استماع أي تحديث على الرسالة (قراءة، ريأكت، تعديل، حذف، فتح صورة لمرة واحدة)
     activeChatListener.on("child_changed", snapshot => {
       const msg = snapshot.val();
       const msgKey = snapshot.key;
-      const tickEl = document.getElementById("ticks-" + msgKey);
-      if (tickEl && msg.seen) {
-        tickEl.innerHTML = "✓✓";
-        tickEl.className = "ticks seen";
-      }
+      renderOrUpdateMessage(msg, msgKey, false);
     });
   }
 
   function closeChat() {
+    if (activeChatPin) {
+      const roomId = getRoomId(myPin, activeChatPin);
+      rtdb.ref("rooms/" + roomId + "/typing/" + myPin).set(false);
+    }
     activeChatPin = null;
     cancelReply();
     if (activeChatListener) activeChatListener.off();
     if (activeStatusListener) activeStatusListener.off();
+    if (activeTypingListener) activeTypingListener.off();
     document.getElementById("chatScreen").classList.remove("active");
     document.getElementById("contactsScreen").classList.add("active");
     renderContactsList();
+  }
+
+  // إرسال مؤشر الكتابة الحي
+  let typingTimeout = null;
+  function handleTyping() {
+    if (!activeChatPin) return;
+    const roomId = getRoomId(myPin, activeChatPin);
+    rtdb.ref("rooms/" + roomId + "/typing/" + myPin).set(true);
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      rtdb.ref("rooms/" + roomId + "/typing/" + myPin).set(false);
+    }, 2000);
+  }
+
+  // التحكم في زر النزول لأسفل الشات
+  function handleChatScroll() {
+    const chatBox = document.getElementById("chatBox");
+    const btn = document.getElementById("scrollBottomBtn");
+    const dist = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight;
+    btn.style.display = dist > 150 ? "flex" : "none";
+  }
+
+  function scrollToBottom() {
+    const chatBox = document.getElementById("chatBox");
+    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
   let currentReplyObj = null;
@@ -683,12 +1026,12 @@
     document.getElementById("replyPreviewBar").style.display = "none";
   }
 
-  function pushMessage(type, content, previewText) {
+  function pushMessage(type, content, previewText, extraData = {}) {
     if (!activeChatPin) return;
     const roomId = getRoomId(myPin, activeChatPin);
     const now = new Date();
     const timestamp = Date.now();
-    
+
     const msgData = {
       senderPin: myPin,
       type: type,
@@ -696,15 +1039,23 @@
       replyTo: currentReplyObj,
       time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       timestamp: timestamp,
-      seen: false
+      seen: false,
+      ...extraData
     };
 
     rtdb.ref("rooms/" + roomId + "/messages").push(msgData);
-    rtdb.ref("rooms/" + roomId + "/lastMessage").set({
+
+    const lastMsgObj = {
       senderPin: myPin,
       preview: previewText,
       timestamp: timestamp
-    });
+    };
+    rtdb.ref("rooms/" + roomId + "/lastMessage").set(lastMsgObj);
+
+    // تسجيل الشات تلقائياً عند الطرفين ليظهر عند صديقك فوراً
+    rtdb.ref("userChats/" + myPin + "/" + activeChatPin).set(lastMsgObj);
+    rtdb.ref("userChats/" + activeChatPin + "/" + myPin).set(lastMsgObj);
+    rtdb.ref("rooms/" + roomId + "/typing/" + myPin).set(false);
 
     cancelReply();
   }
@@ -718,6 +1069,8 @@
     input.focus();
   }
 
+  // رفع الصور ومعاينتها للاختيار بين (عادي) أو (مرة واحدة)
+  let pendingImageDataUrl = null;
   function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -733,7 +1086,9 @@
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, w, h);
-        pushMessage("image", canvas.toDataURL("image/jpeg", 0.65), "📷 صورة");
+        pendingImageDataUrl = canvas.toDataURL("image/jpeg", 0.65);
+        document.getElementById("previewImgElement").src = pendingImageDataUrl;
+        document.getElementById("imgPreviewModal").classList.add("show");
       };
       img.src = ev.target.result;
     };
@@ -741,6 +1096,88 @@
     e.target.value = "";
   }
 
+  function confirmSendImage(isViewOnce) {
+    if (!pendingImageDataUrl) return;
+    if (isViewOnce) {
+      pushMessage("image", pendingImageDataUrl, "① صورة لمرة واحدة", { viewOnce: true, opened: false });
+    } else {
+      pushMessage("image", pendingImageDataUrl, "📷 صورة", { viewOnce: false });
+    }
+    closeImagePreview();
+  }
+
+  function closeImagePreview() {
+    pendingImageDataUrl = null;
+    document.getElementById("previewImgElement").src = "";
+    document.getElementById("imgPreviewModal").classList.remove("show");
+  }
+
+  // فتح الصورة لمرة واحدة وحذفها من السيرفر فوراً
+  function openViewOnceImage(msgKey, imgContent) {
+    if (!activeChatPin || !imgContent) return;
+    const roomId = getRoomId(myPin, activeChatPin);
+    document.getElementById("viewOnceImgElement").src = imgContent;
+    document.getElementById("viewOnceModal").classList.add("show");
+
+    // مسح الصورة من السيرفر وتحويل حالتها إلى مفتوحة
+    rtdb.ref("rooms/" + roomId + "/messages/" + msgKey).update({
+      opened: true,
+      content: ""
+    });
+  }
+
+  function closeViewOnceModal() {
+    document.getElementById("viewOnceImgElement").src = "";
+    document.getElementById("viewOnceModal").classList.remove("show");
+  }
+
+  // تعديل الرسالة النصية
+  function editMessage(msgKey, oldText) {
+    if (!activeChatPin) return;
+    const newText = prompt("تعديل الرسالة:", oldText);
+    if (newText !== null && newText.trim() !== "" && newText.trim() !== oldText) {
+      const roomId = getRoomId(myPin, activeChatPin);
+      rtdb.ref("rooms/" + roomId + "/messages/" + msgKey).update({
+        content: newText.trim(),
+        edited: true
+      });
+    }
+  }
+
+  // حذف الرسالة لدى الجميع
+  function deleteMessage(msgKey) {
+    if (!activeChatPin) return;
+    if (!confirm("حذف هذه الرسالة لدى الجميع؟")) return;
+    const roomId = getRoomId(myPin, activeChatPin);
+    rtdb.ref("rooms/" + roomId + "/messages/" + msgKey).update({
+      deleted: true,
+      content: "",
+      replyTo: null
+    });
+  }
+
+  // إضافة أو إزالة ريأكت على الرسالة
+  function toggleReactionBar(msgKey) {
+    const bar = document.getElementById("react-bar-" + msgKey);
+    if (bar) bar.classList.toggle("show");
+  }
+
+  function setReaction(msgKey, emoji) {
+    if (!activeChatPin) return;
+    const roomId = getRoomId(myPin, activeChatPin);
+    const reactRef = rtdb.ref("rooms/" + roomId + "/messages/" + msgKey + "/reactions/" + myPin);
+    reactRef.once("value", snap => {
+      if (snap.val() === emoji) {
+        reactRef.remove();
+      } else {
+        reactRef.set(emoji);
+      }
+    });
+    const bar = document.getElementById("react-bar-" + msgKey);
+    if (bar) bar.classList.remove("show");
+  }
+
+  // تسجيل الصوت
   let mediaRecorder = null;
   let audioChunks = [];
   let isRecording = false;
@@ -768,7 +1205,7 @@
         micBtn.textContent = "⏹️";
         document.getElementById("msgInput").placeholder = "🔴 جاري التسجيل...";
       } catch (err) {
-        alert("تأكد من فتح الرابط عبر HTTPS للسماح بالمايكروفون.");
+        alert("تأكد من السماح بصلاحية المايكروفون.");
       }
     } else {
       mediaRecorder.stop();
@@ -779,16 +1216,25 @@
     }
   }
 
-  function renderMessage(msg, msgKey) {
+  // بناء وتحديث الرسالة في الشات
+  function renderOrUpdateMessage(msg, msgKey, isNew) {
     const chatBox = document.getElementById("chatBox");
     const isMe = msg.senderPin === myPin;
-    const wrapper = document.createElement("div");
+
+    let wrapper = document.getElementById("msg-" + msgKey);
+    if (!wrapper) {
+      wrapper = document.createElement("div");
+      wrapper.id = "msg-" + msgKey;
+      chatBox.appendChild(wrapper);
+    }
     wrapper.className = "msg-wrapper " + (isMe ? "me" : "friend");
+    wrapper.innerHTML = "";
 
     const bubble = document.createElement("div");
     bubble.className = "msg";
 
-    if (msg.replyTo) {
+    // عرض الاقتباس إن وجد ولم تُحذف الرسالة
+    if (msg.replyTo && !msg.deleted) {
       const quote = document.createElement("div");
       quote.className = "quoted-msg";
       quote.innerHTML = `<strong>${msg.replyTo.sender === "me" ? "أنت" : "صديقك"}</strong>${msg.replyTo.text}`;
@@ -796,16 +1242,45 @@
     }
 
     let summary = "";
-    if (msg.type === "text") {
+
+    if (msg.deleted) {
+      const delDiv = document.createElement("div");
+      delDiv.className = "deleted-text";
+      delDiv.textContent = "🚫 تم حذف هذه الرسالة";
+      bubble.appendChild(delDiv);
+    } else if (msg.type === "text") {
       const p = document.createElement("div");
       p.textContent = msg.content;
+      if (msg.edited) {
+        const ed = document.createElement("span");
+        ed.className = "edited-tag";
+        ed.textContent = "(معدلة)";
+        p.appendChild(ed);
+      }
       bubble.appendChild(p);
       summary = msg.content;
     } else if (msg.type === "image") {
-      const img = document.createElement("img");
-      img.src = msg.content;
-      bubble.appendChild(img);
-      summary = "📷 صورة";
+      if (msg.viewOnce) {
+        const voBtn = document.createElement("div");
+        if (msg.opened) {
+          voBtn.className = "view-once-btn opened";
+          voBtn.innerHTML = `<span class="vo-icon">1</span> 🕓 تم فتح الصورة`;
+        } else if (isMe) {
+          voBtn.className = "view-once-btn opened";
+          voBtn.innerHTML = `<span class="vo-icon">1</span> صورة لمرة واحدة (لم تُفتح بعد)`;
+        } else {
+          voBtn.className = "view-once-btn";
+          voBtn.innerHTML = `<span class="vo-icon">1</span> اضغط لمشاهدة الصورة مرة واحدة`;
+          voBtn.onclick = () => openViewOnceImage(msgKey, msg.content);
+        }
+        bubble.appendChild(voBtn);
+        summary = "① صورة لمرة واحدة";
+      } else {
+        const img = document.createElement("img");
+        img.src = msg.content;
+        bubble.appendChild(img);
+        summary = "📷 صورة";
+      }
     } else if (msg.type === "audio") {
       const audio = document.createElement("audio");
       audio.controls = true;
@@ -814,31 +1289,91 @@
       summary = "🎤 ريكورد";
     }
 
+    // شريط الأزرار أسفل الرسالة (رد، ريأكت، تعديل، حذف، الوقت، صح القراءة)
     const meta = document.createElement("div");
     meta.className = "msg-meta";
 
-    const replyBtn = document.createElement("button");
-    replyBtn.className = "reply-trigger";
-    replyBtn.textContent = "↩️ رد";
-    replyBtn.onclick = () => setReply(isMe ? "me" : "friend", summary);
-    meta.appendChild(replyBtn);
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "msg-actions";
+
+    if (!msg.deleted) {
+      const replyBtn = document.createElement("button");
+      replyBtn.className = "action-btn";
+      replyBtn.textContent = "↩️";
+      replyBtn.title = "رد";
+      replyBtn.onclick = () => setReply(isMe ? "me" : "friend", summary);
+      actionsDiv.appendChild(replyBtn);
+
+      const reactBtn = document.createElement("button");
+      reactBtn.className = "action-btn";
+      reactBtn.textContent = "😊";
+      reactBtn.title = "تفاعل";
+      reactBtn.onclick = () => toggleReactionBar(msgKey);
+      actionsDiv.appendChild(reactBtn);
+
+      if (isMe && msg.type === "text") {
+        const editBtn = document.createElement("button");
+        editBtn.className = "action-btn";
+        editBtn.textContent = "✏️";
+        editBtn.title = "تعديل";
+        editBtn.onclick = () => editMessage(msgKey, msg.content);
+        actionsDiv.appendChild(editBtn);
+      }
+
+      if (isMe) {
+        const delBtn = document.createElement("button");
+        delBtn.className = "action-btn";
+        delBtn.textContent = "🗑️";
+        delBtn.title = "حذف لدى الجميع";
+        delBtn.onclick = () => deleteMessage(msgKey);
+        actionsDiv.appendChild(delBtn);
+      }
+    }
+
+    meta.appendChild(actionsDiv);
 
     const timeSpan = document.createElement("span");
     let tickHtml = "";
     if (isMe) {
-      if (msg.seen) {
-        tickHtml = `<span id="ticks-${msgKey}" class="ticks seen">✓✓</span>`;
-      } else {
-        tickHtml = `<span id="ticks-${msgKey}" class="ticks">✓</span>`;
-      }
+      tickHtml = msg.seen
+        ? `<span class="ticks seen">✓✓</span>`
+        : `<span class="ticks">✓</span>`;
     }
     timeSpan.innerHTML = `${msg.time} ${tickHtml}`;
     meta.appendChild(timeSpan);
 
     bubble.appendChild(meta);
     wrapper.appendChild(bubble);
-    chatBox.appendChild(wrapper);
-    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // شريط اختيار الإيموجي
+    if (!msg.deleted) {
+      const reactBar = document.createElement("div");
+      reactBar.id = "react-bar-" + msgKey;
+      reactBar.className = "reaction-bar";
+      ["❤️", "😂", "😮", "😢", "😡", "👍"].forEach(em => {
+        const sp = document.createElement("span");
+        sp.textContent = em;
+        sp.onclick = () => setReaction(msgKey, em);
+        reactBar.appendChild(sp);
+      });
+      wrapper.appendChild(reactBar);
+    }
+
+    // عرض الإيموجي المختار أسفل الرسالة
+    if (msg.reactions && !msg.deleted) {
+      const emojis = Object.values(msg.reactions);
+      if (emojis.length > 0) {
+        const reactDisp = document.createElement("div");
+        reactDisp.className = "reactions-display";
+        reactDisp.textContent = emojis.join(" ");
+        reactDisp.onclick = () => toggleReactionBar(msgKey);
+        wrapper.appendChild(reactDisp);
+      }
+    }
+
+    if (isNew) {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
   }
 
   renderContactsList();
