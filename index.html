@@ -20,20 +20,27 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
+
+    /* إجبار المتصفح وقالب الأندرويد على إلغاء السحب للتحديث نهائياً */
     html, body {
       background-color: #0b141a;
       color: #e9edef;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100dvh;
       width: 100%;
-      overflow: hidden;
-      /* منع عمل ريفرش للصفحة عند السحب لأعلى */
+      height: calc(100dvh + 120px);
+      overflow-x: hidden;
+      overflow-y: scroll;
       overscroll-behavior: none;
-      touch-action: manipulation;
+      -webkit-overflow-scrolling: auto;
     }
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+      display: none;
+    }
+
     .app-container {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
       width: 100%;
       max-width: 500px;
       height: 100dvh;
@@ -42,8 +49,8 @@
       flex-direction: column;
       border-left: 1px solid #222d34;
       border-right: 1px solid #222d34;
-      position: relative;
       overscroll-behavior: none;
+      z-index: 10;
     }
 
     .screen {
@@ -52,6 +59,7 @@
       width: 100%;
       height: 100%;
       position: relative;
+      overflow: hidden;
     }
     .screen.active {
       display: flex;
@@ -63,6 +71,7 @@
       padding: 10px 12px;
       border-bottom: 1px solid #2a3942;
       z-index: 10;
+      touch-action: none;
     }
     .top-bar {
       display: flex;
@@ -236,6 +245,7 @@
       justify-content: space-between;
       border-bottom: 1px solid #2a3942;
       z-index: 10;
+      touch-action: none;
     }
     .chat-header-right {
       display: flex;
@@ -437,10 +447,10 @@
       letter-spacing: -2px;
       font-size: 12.5px;
       margin-right: 4px;
-      color: #99aab5; /* رمادي واضح لعلامة وعلامتين الاستلام */
+      color: #99aab5;
     }
     .ticks.seen {
-      color: #53bdeb; /* أزرق عند القراءة */
+      color: #53bdeb;
     }
 
     /* قائمة اختيار الإيموجي والريأكت المعروض */
@@ -512,6 +522,7 @@
       justify-content: space-between;
       align-items: center;
       font-size: 13px;
+      touch-action: none;
     }
     .reply-preview-content {
       overflow: hidden;
@@ -540,6 +551,7 @@
       display: flex;
       gap: 6px;
       align-items: flex-end;
+      touch-action: none;
     }
     .icon-btn {
       background-color: #2a3942;
@@ -580,6 +592,7 @@
       height: 40px;
       max-height: 110px;
       overflow-y: auto;
+      touch-action: pan-y;
     }
     .send-btn {
       background-color: #00a884;
@@ -608,6 +621,7 @@
       align-items: center;
       z-index: 100;
       padding: 16px;
+      touch-action: none;
     }
     .modal-overlay.show {
       display: flex;
@@ -653,7 +667,7 @@
 </head>
 <body>
 
-<div class="app-container">
+<div class="app-container" id="appContainer">
 
   <!-- الشاشة الرئيسية: قائمة المحادثات -->
   <div id="contactsScreen" class="screen active">
@@ -730,6 +744,53 @@
 </div>
 
 <script>
+  // ===== القفل النهائي لمنع السحب للتحديث (Pull-to-Refresh) في الأندرويد والمتصفح =====
+  function keepWindowScrolled() {
+    if (window.scrollY < 30) {
+      window.scrollTo(0, 60);
+    }
+  }
+  window.addEventListener("load", keepWindowScrolled);
+  window.addEventListener("scroll", keepWindowScrolled, { passive: true });
+  setInterval(keepWindowScrolled, 250);
+
+  let touchStartY = 0;
+  document.addEventListener("touchstart", e => {
+    keepWindowScrolled();
+    if (e.touches.length === 1) {
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+
+  document.addEventListener("touchmove", e => {
+    keepWindowScrolled();
+    if (e.touches.length !== 1) return;
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - touchStartY; // موجب = سحب الإصبع لأسفل (طلوع لأول الشات)
+
+    const scrollable = e.target.closest(".chat-box, .contacts-list, #msgInput");
+    if (!scrollable) {
+      // لو السحب فوق الهيدر أو منطقة فاضية، امنع تحريك الصفحة نهائياً
+      if (e.cancelable) e.preventDefault();
+      return;
+    }
+
+    // لو وصل لأعلى نقطة في صندوق الشات وبيسحب لتحت أكتر، امنع الريفرش فوراً
+    if (scrollable.scrollTop <= 0 && deltaY > 0) {
+      if (e.cancelable) e.preventDefault();
+    }
+  }, { passive: false });
+
+  // ضبط ارتفاع التطبيق مع فتح الكيبورد في الموبايل
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+      const appContainer = document.getElementById("appContainer");
+      appContainer.style.height = window.visualViewport.height + "px";
+      keepWindowScrolled();
+    });
+  }
+  // =========================================================================
+
   const firebaseConfig = {
     apiKey: "AIzaSyBG7pwVcdC1e0Chq4yUDbypeLIvzYn3fiI",
     authDomain: "m7chat-8f7ed.firebaseapp.com",
@@ -751,13 +812,11 @@
   }
   document.getElementById("myCodeDisplay").textContent = myPin;
 
-  // تكبير مربع النص تلقائياً مع السطور الجديدة
   function autoResizeInput(el) {
     el.style.height = "40px";
     el.style.height = Math.min(el.scrollHeight, 110) + "px";
   }
 
-  // نغمة إشعار خفيفة
   function playNotificationSound() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -869,7 +928,6 @@
     });
   }
 
-  // استماع تلقائي لأي شخص يرسل لك رسالة حتى لو لم تضفه
   rtdb.ref("userChats/" + myPin).on("value", snapshot => {
     const data = snapshot.val();
     if (!data) return;
@@ -892,7 +950,6 @@
     if (changed) saveContacts();
   });
 
-  // تحويل الرسائل الواردة إلى "تم الاستلام ✓✓ رمادي" بمجرد أن يكون التطبيق مفتوحاً بالخارج
   function markRoomMessagesDelivered(roomId) {
     rtdb.ref("rooms/" + roomId + "/messages").limitToLast(25).once("value", snap => {
       snap.forEach(child => {
@@ -913,7 +970,6 @@
       const last = snapshot.val();
       if (!last) return;
 
-      // إذا كانت الرسالة من صديقك وأنت فاتح التطبيق بالخارج، علمها كـ "تم الاستلام ✓✓ رمادي"
       if (last.senderPin !== myPin) {
         markRoomMessagesDelivered(roomId);
       }
@@ -973,7 +1029,6 @@
     friendIsTyping = false;
     updateHeaderStatusDisplay();
 
-    // متابعة حالة الأونلاين
     if (activeStatusListener) activeStatusListener.off();
     activeStatusListener = rtdb.ref("status/" + pin);
     activeStatusListener.on("value", snap => {
@@ -984,7 +1039,6 @@
 
     const roomId = getRoomId(myPin, pin);
 
-    // متابعة حالة "يكتب الآن..."
     if (activeTypingListener) activeTypingListener.off();
     activeTypingListener = rtdb.ref("rooms/" + roomId + "/typing/" + pin);
     activeTypingListener.on("value", snap => {
@@ -999,7 +1053,6 @@
     const messagesRef = rtdb.ref("rooms/" + roomId + "/messages");
     activeChatListener = messagesRef;
 
-    // استماع الرسائل الجديدة وتحويلها إلى مقروءة (✓✓ أزرق)
     activeChatListener.on("child_added", snapshot => {
       const msg = snapshot.val();
       const msgKey = snapshot.key;
@@ -1012,7 +1065,6 @@
       renderOrUpdateMessage(msg, msgKey, true);
     });
 
-    // استماع أي تحديث على الرسالة (استلام، قراءة، ريأكت، تعديل، حذف)
     activeChatListener.on("child_changed", snapshot => {
       const msg = snapshot.val();
       const msgKey = snapshot.key;
@@ -1035,7 +1087,6 @@
     renderContactsList();
   }
 
-  // إرسال مؤشر الكتابة الحي
   let typingTimeout = null;
   function handleTyping() {
     if (!activeChatPin) return;
@@ -1047,7 +1098,6 @@
     }, 2000);
   }
 
-  // التحكم في زر النزول لأسفل الشات
   function handleChatScroll() {
     const chatBox = document.getElementById("chatBox");
     const btn = document.getElementById("scrollBottomBtn");
@@ -1101,7 +1151,6 @@
     };
     rtdb.ref("rooms/" + roomId + "/lastMessage").set(lastMsgObj);
 
-    // تسجيل الشات تلقائياً عند الطرفين
     rtdb.ref("userChats/" + myPin + "/" + activeChatPin).set(lastMsgObj);
     rtdb.ref("userChats/" + activeChatPin + "/" + myPin).set(lastMsgObj);
     rtdb.ref("rooms/" + roomId + "/typing/" + myPin).set(false);
@@ -1119,7 +1168,6 @@
     input.focus();
   }
 
-  // رفع الصور ومعاينتها
   let pendingImageDataUrl = null;
   function handleImageUpload(e) {
     const file = e.target.files[0];
@@ -1162,7 +1210,6 @@
     document.getElementById("imgPreviewModal").classList.remove("show");
   }
 
-  // فتح الصورة لمرة واحدة وحذفها من السيرفر فوراً
   function openViewOnceImage(msgKey, imgContent) {
     if (!activeChatPin || !imgContent) return;
     const roomId = getRoomId(myPin, activeChatPin);
@@ -1180,7 +1227,6 @@
     document.getElementById("viewOnceModal").classList.remove("show");
   }
 
-  // تعديل الرسالة النصية
   function editMessage(msgKey, oldText) {
     if (!activeChatPin) return;
     const newText = prompt("تعديل الرسالة:", oldText);
@@ -1193,7 +1239,6 @@
     }
   }
 
-  // حذف الرسالة لدى الجميع
   function deleteMessage(msgKey) {
     if (!activeChatPin) return;
     if (!confirm("حذف هذه الرسالة لدى الجميع؟")) return;
@@ -1205,7 +1250,6 @@
     });
   }
 
-  // إضافة أو إزالة ريأكت على الرسالة
   function toggleReactionBar(msgKey) {
     const bar = document.getElementById("react-bar-" + msgKey);
     if (bar) bar.classList.toggle("show");
@@ -1226,7 +1270,6 @@
     if (bar) bar.classList.remove("show");
   }
 
-  // تسجيل الصوت
   let mediaRecorder = null;
   let audioChunks = [];
   let isRecording = false;
@@ -1265,7 +1308,6 @@
     }
   }
 
-  // بناء وتحديث الرسالة في الشات
   function renderOrUpdateMessage(msg, msgKey, isNew) {
     const chatBox = document.getElementById("chatBox");
     const isMe = msg.senderPin === myPin;
@@ -1380,7 +1422,6 @@
 
     meta.appendChild(actionsDiv);
 
-    // نظام الـ 3 حالات لعلامات الصح (✓ إرسال، ✓✓ استلام رمادي، ✓✓ قراءة أزرق)
     const timeSpan = document.createElement("span");
     let tickHtml = "";
     if (isMe) {
